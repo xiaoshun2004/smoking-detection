@@ -1,0 +1,14 @@
+timestamp,source,frame_index,max_conf,event_image
+2026-01-28T01:19:09.661564,G:\视频\NVIDIA\Desktop\Vedio1.mp4,3,0.7207,runs/detect/events\event_20260128_011909_000003.jpg
+2026-01-28T01:19:14.675823,G:\视频\NVIDIA\Desktop\Vedio1.mp4,142,0.7310,runs/detect/events\event_20260128_011914_000142.jpg
+2026-01-28T01:19:19.681505,G:\视频\NVIDIA\Desktop\Vedio1.mp4,261,0.7917,runs/detect/events\event_20260128_011919_000261.jpg
+2026-01-28T01:19:24.694006,G:\视频\NVIDIA\Desktop\Vedio1.mp4,376,0.8475,runs/detect/events\event_20260128_011924_000376.jpg
+2026-01-28T01:19:29.728750,G:\视频\NVIDIA\Desktop\Vedio1.mp4,494,0.8447,runs/detect/events\event_20260128_011929_000494.jpg
+2026-01-28T01:19:34.759661,G:\视频\NVIDIA\Desktop\Vedio1.mp4,606,0.8920,runs/detect/events\event_20260128_011934_000606.jpg
+2026-01-28T01:20:37.577413,G:\视频\NVIDIA\Desktop\Vedio1.mp4,5,0.7087,runs/detect/events\event_20260128_012037_000005.jpg
+2026-01-28T01:21:13.662642,G:\视频\NVIDIA\Desktop\Vedio1.mp4,68,0.7721,runs/detect/events\event_20260128_012113_000068.jpg
+2026-01-28T01:21:18.673996,G:\视频\NVIDIA\Desktop\Vedio1.mp4,202,0.5404,runs/detect/events\event_20260128_012118_000202.jpg
+2026-01-28T01:21:23.699184,G:\视频\NVIDIA\Desktop\Vedio1.mp4,329,0.7704,runs/detect/events\event_20260128_012123_000329.jpg
+2026-01-28T01:21:28.707704,G:\视频\NVIDIA\Desktop\Vedio1.mp4,454,0.8132,runs/detect/events\event_20260128_012128_000454.jpg
+2026-01-28T01:21:33.723310,G:\视频\NVIDIA\Desktop\Vedio1.mp4,571,0.8773,runs/detect/events\event_20260128_012133_000571.jpg
+2026-01-28T01:21:38.731683,G:\视频\NVIDIA\Desktop\Vedio1.mp4,688,0.8932,runs/detect/events\event_20260128_012138_000688.jpg

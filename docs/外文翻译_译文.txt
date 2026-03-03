@@ -1,0 +1,118 @@
+Ultralytics YOLOv8 技术文档（译文）
+
+原文来源：https://docs.ultralytics.com/models/yolov8/
+译者：
+翻译日期：
+
+
+一、概述
+
+YOLOv8 由 Ultralytics 于 2023 年 1 月 10 日发布，在检测精度与推理速度方面均达到了当前领先水平。在继承前代 YOLO 版本技术积累的基础上，YOLOv8 引入了多项新特性与优化措施，使其成为各类目标检测任务在广泛应用场景中的理想选择。
+
+
+二、YOLOv8 的核心特性
+
+（1）丰富的预训练模型：YOLOv8 提供了一系列预训练模型，以满足不同任务和性能需求，使用户能够更轻松地为特定应用场景找到合适的模型。
+
+（2）精度与速度的优化权衡：YOLOv8 专注于在精度与速度之间保持最佳平衡，适用于多种应用领域的实时目标检测任务。
+
+（3）无锚框分离式 Ultralytics 检测头：YOLOv8 采用了无锚框（Anchor-free）分离式 Ultralytics 检测头，相比传统基于锚框的方法，在检测精度和效率方面均有所提升。
+
+（4）先进的骨干网络与颈部结构：YOLOv8 采用了当前最先进的骨干网络（Backbone）与颈部网络（Neck）架构，从而改善了特征提取能力和目标检测性能。
+
+
+三、支持的任务与模式
+
+YOLOv8 系列提供了多种模型变体，每种变体针对计算机视觉中的特定任务进行了专门优化。这些模型旨在满足从目标检测到更复杂任务（如实例分割、姿态/关键点检测、旋转目标检测和图像分类）的各类需求。
+
+YOLOv8 系列的每个变体均针对其对应任务进行了优化，以确保高性能与高精度。此外，这些模型兼容多种运行模式，包括推理（Inference）、验证（Validation）、训练（Training）和导出（Export），便于在部署与开发的不同阶段使用。
+
+模型变体包括：
+- YOLOv8（目标检测）：yolov8n.pt、yolov8s.pt、yolov8m.pt、yolov8l.pt、yolov8x.pt
+- YOLOv8-seg（实例分割）：yolov8n-seg.pt、yolov8s-seg.pt 等
+- YOLOv8-pose（姿态/关键点检测）：yolov8n-pose.pt、yolov8s-pose.pt 等
+- YOLOv8-obb（旋转目标检测）：yolov8n-obb.pt、yolov8s-obb.pt 等
+- YOLOv8-cls（图像分类）：yolov8n-cls.pt、yolov8s-cls.pt 等
+
+上述模型变体概览表展示了 YOLOv8 各变体在特定任务中的适用性，以及与推理、验证、训练和导出等运行模式的兼容性，体现了 YOLOv8 系列的多功能性与鲁棒性，使其适用于计算机视觉领域的各类应用。
+
+
+四、性能指标
+
+目标检测（COCO 数据集）：
+YOLOv8 在 COCO 数据集上训练的模型包含 80 个预训练类别。
+
+模型        | 输入尺寸(像素) | mAP(val 50-95) | CPU ONNX速度(ms) | A100 TensorRT速度(ms) | 参数量(M) | 计算量(B)
+YOLOv8n     | 640           | 37.3           | 80.4             | 0.99                  | 3.2       | 8.7
+YOLOv8s     | 640           | 44.9           | 128.4            | 1.20                  | 11.2      | 28.6
+YOLOv8m     | 640           | 50.2           | 234.7            | 1.83                  | 25.9      | 78.9
+YOLOv8l     | 640           | 52.9           | 375.2            | 2.39                  | 43.7      | 165.2
+YOLOv8x     | 640           | 53.9           | 479.1            | 3.53                  | 68.2      | 257.8
+
+
+五、YOLOv8 使用示例
+
+以下示例提供了简单的 YOLOv8 训练与推理用法。有关预测、训练、验证和导出等模式的完整文档，请参阅相应的文档页面。
+
+Python 示例：
+
+    from ultralytics import YOLO
+
+    # 加载 COCO 预训练的 YOLOv8n 模型
+    model = YOLO("yolov8n.pt")
+
+    # 显示模型信息（可选）
+    model.info()
+
+    # 使用 COCO8 示例数据集训练模型，共 100 个 epoch
+    results = model.train(data="coco8.yaml", epochs=100, imgsz=640)
+
+    # 使用 YOLOv8n 模型对 'bus.jpg' 图片进行推理
+    results = model("path/to/bus.jpg")
+
+命令行示例：
+
+    # 加载 COCO 预训练的 YOLOv8n 模型，并在 COCO8 示例数据集上训练 100 个 epoch
+    yolo train model=yolov8n.pt data=coco8.yaml epochs=100 imgsz=640
+
+    # 加载 COCO 预训练的 YOLOv8n 模型，并对 'bus.jpg' 图片进行推理
+    yolo predict model=yolov8n.pt source=path/to/bus.jpg
+
+
+六、引用与致谢
+
+由于模型迭代速度较快，Ultralytics 尚未为 YOLOv8 发表正式的研究论文。团队将重心放在推动技术进步和降低使用门槛上，而非撰写静态文档。有关 YOLO 架构、功能和使用方法的最新信息，请参阅官方 GitHub 仓库和文档。
+
+如果您在研究中使用了 YOLOv8 模型或本仓库中的其他软件，请使用以下格式进行引用：
+
+    @software{yolov8_ultralytics,
+      author = {Glenn Jocher and Ayush Chaurasia and Jing Qiu},
+      title = {Ultralytics YOLOv8},
+      version = {8.0.0},
+      year = {2023},
+      url = {https://github.com/ultralytics/ultralytics},
+      license = {AGPL-3.0}
+    }
+
+
+七、常见问题
+
+7.1 YOLOv8 是什么？与之前的 YOLO 版本有何不同？
+
+YOLOv8 旨在通过先进特性提升实时目标检测性能。与早期版本不同，YOLOv8 引入了无锚框分离式 Ultralytics 检测头、最先进的骨干网络与颈部网络架构，并提供了优化的精度—速度权衡方案，使其适用于各种应用场景。
+
+7.2 如何将 YOLOv8 用于不同的计算机视觉任务？
+
+YOLOv8 支持广泛的计算机视觉任务，包括目标检测、实例分割、姿态/关键点检测、旋转目标检测和图像分类。每个模型变体均针对其特定任务进行了优化，并兼容推理、验证、训练和导出等多种运行模式。
+
+7.3 YOLOv8 模型的性能指标如何？
+
+YOLOv8 模型在多个基准数据集上均达到了当前最优性能。例如，YOLOv8n 模型在 COCO 数据集上的 mAP 为 37.3，在 A100 TensorRT 上的推理速度为 0.99 毫秒。各模型变体在不同任务和数据集上的详细性能指标可在性能指标章节中查阅。
+
+7.4 如何训练 YOLOv8 模型？
+
+YOLOv8 模型的训练可通过 Python 或命令行（CLI）方式完成。PyTorch 预训练的 *.pt 模型文件和 *.yaml 配置文件均可传入 YOLO() 类以创建模型实例。
+
+7.5 是否可以对 YOLOv8 模型进行性能基准测试？
+
+可以。YOLOv8 模型支持在多种导出格式下进行速度与精度的性能基准测试，包括 PyTorch、ONNX、TensorRT 等格式。
