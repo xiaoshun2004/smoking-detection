@@ -1,0 +1,73 @@
+# 数据集（太大不上传，需在新电脑重新下载）
+data/images/
+data/labels/
+data/dataset/
+data/hardneg/
+
+# 训练输出（除 train5/weights 外不上传）
+runs/detect/train*/labels.jpg
+runs/detect/train*/results.png
+runs/detect/train*/results.csv
+runs/detect/train*/args.yaml
+runs/detect/train*/*.jpg
+runs/detect/train*/*.png
+runs/detect/predict*/
+runs/detect/val*/
+runs/detect/runs/
+
+# 预警事件截图（可选上传，如果太多可取消注释下一行）
+runs/detect/events/*.jpg
+
+# 权重占位目录（实际权重在 runs/detect/train5/weights/ 里）
+weights/*.pt
+weights/*.onnx
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.so
+.eggs/
+*.egg-info/
+*.egg
+
+# 虚拟环境
+venv/
+env/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.cursor/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+logs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# 论文/附件（通常不随代码仓库同步）
+*.doc
+*.docx
+*.pdf
+*.ppt
+*.pptx
+*.zip
+毕业论文模板.md
+
+# 演示素材（视频/图片通常较大，建议不随代码仓库同步）
+演示/
+
+# 临时文件
+~WRL*.tmp
+~$*.doc
+*.tmp

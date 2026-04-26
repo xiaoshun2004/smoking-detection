@@ -1,0 +1,28 @@
+# 吸烟检测数据集配置文件
+# 用于 YOLOv8 训练
+
+# 数据集路径（推荐使用项目内相对路径，方便复现）
+# 期望目录结构：
+# data/dataset/
+#   ├── train/images, train/labels
+#   ├── valid/images, valid/labels
+#   └── test/images,  test/labels
+path: data/dataset
+train: train/images
+val: valid/images
+test: test/images
+
+# 类别数量
+nc: 1
+
+# 类别名称
+names:
+  0: Smoking
+
+# 数据集说明
+# - Smoking: 吸烟行为（单类别检测）
+
+# 注意事项
+# 1. 确保图片和标签文件名对应（仅扩展名不同）
+# 2. 标签格式：class_id x_center y_center width height（归一化坐标）
+# 3. 建议训练集和验证集比例为 8:2 或 9:1

@@ -1,0 +1,170 @@
+You Only Look Once: Unified, Real-Time Object Detection
+
+Source:
+https://www.cv-foundation.org/openaccess/content_cvpr_2016/html/Redmon_You_Only_Look_CVPR_2016_paper.html
+
+Citation:
+Redmon J, Divvala S, Girshick R, Farhadi A. You Only Look Once: Unified, Real-Time Object Detection. Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 2016: 779-788.
+
+Note:
+This is a text-organized version for translation use. Core body text is retained, while formulas, figure contents, tables, and most references are omitted or simplified.
+
+Abstract
+
+We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance.
+
+Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes 155 frames per second while still achieving double the mAP of other real-time detectors. Compared to state-of-the-art detection systems, YOLO makes more localization errors but is less likely to predict false positives on background. Finally, YOLO learns very general representations of objects. It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork.
+
+1. Introduction
+
+Humans glance at an image and instantly know what objects are in the image, where they are, and how they interact. The human visual system is fast and accurate, allowing us to perform complex tasks like driving with little conscious thought. Fast, accurate algorithms for object detection would allow computers to drive cars without specialized sensors, enable assistive devices to convey real-time scene information to human users, and unlock the potential for general-purpose, responsive robotic systems.
+
+Current detection systems repurpose classifiers to perform detection. To detect an object, these systems take a classifier for that object and evaluate it at various locations and scales in a test image. Systems like deformable parts models use a sliding window approach where the classifier is run at evenly spaced locations over the entire image.
+
+More recent approaches like R-CNN use region proposal methods to first generate potential bounding boxes in an image and then run a classifier on these proposed boxes. After classification, post-processing is used to refine the bounding boxes, eliminate duplicate detections, and rescore the boxes based on other objects in the scene. These complex pipelines are slow and hard to optimize because each individual component must be trained separately.
+
+We reframe object detection as a single regression problem, straight from image pixels to bounding box coordinates and class probabilities. Using our system, you only look once at an image to predict what objects are present and where they are.
+
+YOLO is refreshingly simple. A single convolutional network simultaneously predicts multiple bounding boxes and class probabilities for those boxes. YOLO trains on full images and directly optimizes detection performance. This unified model has several benefits over traditional methods of object detection.
+
+First, YOLO is extremely fast. Since we frame detection as a regression problem, we do not need a complex pipeline. We simply run our neural network on a new image at test time to predict detections. Our base network runs at 45 frames per second with no batch processing on a Titan X GPU and a fast version runs at more than 150 fps. This means we can process streaming video in real time with less than 25 milliseconds of latency. Furthermore, YOLO achieves more than twice the mean average precision of other real-time systems.
+
+Second, YOLO reasons globally about the image when making predictions. Unlike sliding-window and region-proposal-based techniques, YOLO sees the entire image during training and test time, so it implicitly encodes contextual information about classes as well as their appearance. Fast R-CNN mistakes background patches in an image for objects because it cannot see the larger context. YOLO makes less than half the number of background errors compared to Fast R-CNN.
+
+Third, YOLO learns generalizable representations of objects. When trained on natural images and tested on artwork, YOLO outperforms top detection methods like DPM and R-CNN by a wide margin. Since YOLO is highly generalizable, it is less likely to break down when applied to new domains or unexpected inputs.
+
+YOLO still lags behind state-of-the-art detection systems in accuracy. While it can quickly identify objects in images, it struggles to precisely localize some objects, especially small ones. We examine these trade-offs further in our experiments.
+
+2. Unified Detection
+
+We unify the separate components of object detection into a single neural network. Our network uses features from the entire image to predict each bounding box. It also predicts all bounding boxes across all classes for an image simultaneously. This means our network reasons globally about the full image and all the objects in the image. The YOLO design enables end-to-end training and real-time speeds while maintaining high average precision.
+
+Our system divides the input image into an S x S grid. If the center of an object falls into a grid cell, that grid cell is responsible for detecting that object.
+
+Each grid cell predicts B bounding boxes and confidence scores for those boxes. These confidence scores reflect how confident the model is that the box contains an object and also how accurate it thinks the predicted box is. Formally, confidence can be understood as Pr(Object) multiplied by IOU between the predicted box and ground truth. If no object exists in that cell, the confidence scores should be zero. Otherwise, the confidence score should equal the intersection over union between the predicted box and the ground-truth box.
+
+Each bounding box consists of five predictions: x, y, w, h, and confidence. The x and y coordinates represent the center of the box relative to the bounds of the grid cell. The width and height are predicted relative to the whole image. Finally, the confidence prediction represents the IOU between the predicted box and any ground-truth box.
+
+Each grid cell also predicts C conditional class probabilities, Pr(Class i | Object). These probabilities are conditioned on the grid cell containing an object. We only predict one set of class probabilities per grid cell, regardless of the number of boxes B.
+
+At test time we multiply the conditional class probabilities and the individual box confidence predictions to obtain class-specific confidence scores for each box. These scores encode both the probability of that class appearing in the box and how well the predicted box fits the object. For evaluating YOLO on PASCAL VOC, the paper uses S = 7 and B = 2. Since PASCAL VOC has 20 labeled classes, C = 20. The final prediction is therefore a 7 x 7 x 30 tensor.
+
+2.1. Network Design
+
+We implement this model as a convolutional neural network and evaluate it on the PASCAL VOC detection dataset. The initial convolutional layers of the network extract features from the image while the fully connected layers predict the output probabilities and coordinates.
+
+The network architecture is inspired by GoogLeNet for image classification. The network has 24 convolutional layers followed by 2 fully connected layers. Instead of the inception modules used by GoogLeNet, we use 1 x 1 reduction layers followed by 3 x 3 convolutional layers. The convolutional layers are pretrained on the ImageNet classification task at half the resolution, using 224 x 224 input images, and then the resolution is doubled for detection.
+
+The authors also train a fast version of YOLO designed to push the boundaries of fast object detection. Fast YOLO uses a neural network with fewer convolutional layers, 9 instead of 24, and fewer filters in those layers. Other than the size of the network, all training and testing parameters are the same between YOLO and Fast YOLO.
+
+The final output of the network is the 7 x 7 x 30 tensor of predictions.
+
+2.2. Training
+
+The convolutional layers are first pretrained on the ImageNet 1000-class competition dataset. For pretraining, the first 20 convolutional layers are used, followed by an average-pooling layer and a fully connected layer. This network is trained for approximately a week and achieves a single-crop top-5 accuracy of 88 percent on the ImageNet 2012 validation set. The Darknet framework is used for all training and inference.
+
+The model is then converted to perform detection. Following prior work, the authors add four convolutional layers and two fully connected layers with randomly initialized weights. Detection often requires fine-grained visual information, so the input resolution of the network is increased from 224 x 224 to 448 x 448.
+
+The final layer predicts both class probabilities and bounding box coordinates. The bounding box width and height are normalized by the image width and height so that they fall between 0 and 1. The x and y coordinates are parameterized as offsets of a particular grid cell location, so they are also bounded between 0 and 1. The final layer uses a linear activation function, while the other layers use a leaky rectified linear activation.
+
+The model is optimized using sum-squared error. This objective is easy to optimize, but it does not perfectly align with the goal of maximizing average precision. It weights localization error equally with classification error, which may not be ideal. In addition, many grid cells in each image do not contain any object. This pushes the confidence scores of those cells toward zero and can overpower the gradient from cells that do contain objects. As a result, training may become unstable and diverge early on.
+
+To remedy this, the loss from bounding box coordinate predictions is increased and the loss from confidence predictions for boxes that do not contain objects is decreased. Two parameters are used for this purpose: lambda_coord and lambda_noobj. The paper sets lambda_coord = 5 and lambda_noobj = 0.5.
+
+Sum-squared error also equally weights errors in large boxes and small boxes. In practice, small deviations in large boxes matter less than in small boxes. To partially address this issue, the model predicts the square root of the bounding box width and height instead of the width and height directly.
+
+At training time only one bounding box predictor should be responsible for each object. The responsible predictor is chosen as the one whose current prediction has the highest IOU with the ground truth. This leads to specialization among predictors. Each predictor becomes better at predicting certain sizes, aspect ratios, or classes of object, thereby improving recall.
+
+The loss function only penalizes classification error if an object is present in that grid cell. It also only penalizes bounding box coordinate error if that predictor is responsible for the ground-truth box.
+
+The network is trained for about 135 epochs on the training and validation sets from PASCAL VOC 2007 and 2012. When testing on 2012, the VOC 2007 test data is also included in training. Throughout training, the batch size is 64, the momentum is 0.9, and the weight decay is 0.0005.
+
+The learning rate schedule is staged. At the beginning, the learning rate is slowly increased from 10^-3 to 10^-2. Training then continues with 10^-2 for 75 epochs, 10^-3 for 30 epochs, and 10^-4 for 30 epochs. To avoid overfitting, the model uses dropout and extensive data augmentation. A dropout layer with rate 0.5 after the first connected layer helps prevent co-adaptation between layers. Data augmentation includes random scaling and translations of up to 20 percent of the original image size, as well as random changes to image exposure and saturation in HSV color space.
+
+2.3. Inference
+
+Just like in training, predicting detections for a test image only requires one network evaluation. On PASCAL VOC, the network predicts 98 bounding boxes per image and class probabilities for each box. YOLO is extremely fast at test time because it only requires a single network evaluation, unlike classifier-based methods.
+
+The grid design enforces spatial diversity in the bounding box predictions. Often it is clear which grid cell an object falls into and the network predicts only one box for each object. However, some large objects or objects near the border of multiple cells can be well localized by multiple cells. Non-maximal suppression can be used to fix these multiple detections. While not critical to performance as it is for R-CNN or DPM, non-maximal suppression still adds 2 to 3 percent in mAP.
+
+2.4. Limitations Of YOLO
+
+YOLO imposes strong spatial constraints on bounding box predictions since each grid cell only predicts two boxes and can only have one class. This limits the number of nearby objects that the model can predict. As a result, the model struggles with small objects that appear in groups, such as flocks of birds.
+
+Because the model learns to predict bounding boxes from data, it also struggles to generalize to objects in new or unusual aspect ratios or configurations. In addition, the architecture uses relatively coarse features for predicting bounding boxes because of repeated downsampling from the input image.
+
+Finally, although the model is trained on a loss function that approximates detection performance, that loss treats errors in small and large boxes similarly. A small error in a large box is often benign, while the same error in a small box can have a much larger effect on IOU. The main source of error for YOLO is incorrect localization.
+
+3. Comparison To Other Detection Systems
+
+Object detection is a core problem in computer vision. Detection pipelines generally begin by extracting a set of robust features from input images. Then classifiers or localizers are used to identify objects in the feature space. These classifiers or localizers are run either in sliding-window fashion over the whole image or on some subset of regions in the image. The paper compares YOLO with several top detection frameworks and highlights the main similarities and differences.
+
+Deformable parts models use a sliding-window approach to object detection. DPM relies on a disjoint pipeline to extract static features, classify regions, predict bounding boxes for high-scoring regions, and so on. YOLO replaces all of these disparate parts with a single convolutional neural network. The network performs feature extraction, bounding box prediction, non-maximal suppression, and contextual reasoning concurrently. Instead of using static features, the network learns features inline and optimizes them for the detection task. This unified architecture leads to a faster and more accurate model than DPM.
+
+R-CNN and its variants use region proposals instead of sliding windows to find objects in images. Selective Search generates potential bounding boxes, a convolutional network extracts features, an SVM scores the boxes, a linear model adjusts the bounding boxes, and non-max suppression eliminates duplicate detections. Each stage of this pipeline must be tuned independently, and the resulting system is very slow.
+
+YOLO shares some similarities with R-CNN. Each grid cell proposes potential bounding boxes and scores those boxes using convolutional features. However, YOLO imposes spatial constraints on the proposals, which helps mitigate multiple detections of the same object. YOLO also proposes far fewer bounding boxes, only 98 per image compared with about 2000 from Selective Search. Most importantly, YOLO combines these components into a single jointly optimized model.
+
+Fast and Faster R-CNN improve on the R-CNN framework by sharing computation and using neural networks to propose regions instead of Selective Search. Although they improve speed and accuracy over R-CNN, they still fall short of real-time performance. Many efforts also focus on accelerating DPM through faster HOG computation, cascades, and GPU computation. However, only 30Hz DPM actually reaches real-time performance.
+
+Instead of trying to optimize individual components of a large detection pipeline, YOLO discards the pipeline entirely and is fast by design. Unlike highly specialized detectors for a single class such as faces or people, YOLO is a general-purpose detector that learns to detect many categories simultaneously.
+
+The paper also compares YOLO with Deep MultiBox and OverFeat. Like these methods, YOLO uses a convolutional network to predict locations, but unlike them it forms a complete detection system rather than one stage in a larger pipeline. The authors also note that the design is related to their prior MultiGrasp work, though object detection is substantially more difficult because it must predict multiple objects, their classes, positions, and sizes.
+
+4. Experiments
+
+The paper first compares YOLO with other real-time detection systems on PASCAL VOC 2007. To understand differences between YOLO and R-CNN variants, the authors analyze error types made by YOLO and Fast R-CNN on VOC 2007. Based on these error profiles, they show that YOLO can be used to rescore Fast R-CNN detections and reduce background false positives, thereby giving a significant performance boost. They also present VOC 2012 results and compare mAP with state-of-the-art methods. Finally, they show that YOLO generalizes to new domains better than other detectors on two artwork datasets.
+
+4.1. Comparison To Other Real-Time Systems
+
+Fast YOLO is reported as the fastest object detector on PASCAL at the time of publication. With 52.7 percent mAP, it is more than twice as accurate as prior real-time detection work. Standard YOLO pushes mAP to 63.4 percent while still maintaining real-time performance.
+
+The authors also train YOLO using VGG-16. This version is more accurate but significantly slower, so the remainder of the paper focuses mainly on the faster models.
+
+Fastest DPM speeds up DPM without sacrificing much mAP, but it still misses real-time performance by a factor of two. R-CNN minus R is faster than original R-CNN but still falls short of real time and loses accuracy because it lacks high-quality proposals. Fast R-CNN speeds up the classification stage of R-CNN, but it still depends on Selective Search, which can take around two seconds per image to generate proposals. Thus, despite strong mAP, it is still far from real time.
+
+Faster R-CNN replaces Selective Search with a neural network to propose bounding boxes. In the tests reported by the paper, the most accurate Faster R-CNN model achieves about 7 fps, while a smaller and less accurate one runs at 18 fps. The VGG-16 version of Faster R-CNN is about 10 mAP higher but around six times slower than YOLO. The Zeiler-Fergus Faster R-CNN is closer in speed but also less accurate.
+
+4.2. VOC 2007 Error Analysis
+
+To further examine the differences between YOLO and state-of-the-art detectors, the paper provides a detailed breakdown of results on VOC 2007. YOLO is compared with Fast R-CNN because Fast R-CNN is one of the highest-performing detectors on PASCAL and its detections are publicly available.
+
+Each top prediction is categorized according to its type of error, such as correct detection, localization error, similar-class confusion, other-class confusion, or background false positive. The analysis shows that YOLO struggles more with localization than Fast R-CNN. Localization errors account for more of YOLO's mistakes than all other sources combined.
+
+Fast R-CNN, however, makes many more background errors. According to the paper, 13.6 percent of its top detections are false positives that do not contain any objects. Fast R-CNN is almost three times more likely to predict background detections than YOLO.
+
+4.3. Combining Fast R-CNN And YOLO
+
+Because YOLO makes far fewer background mistakes than Fast R-CNN, the authors use YOLO to eliminate background detections from Fast R-CNN and obtain a significant boost in performance. For every bounding box predicted by R-CNN, they check whether YOLO predicts a similar box. If it does, they boost that prediction based on YOLO's predicted probability and the overlap between the two boxes.
+
+The resulting mAP increases by 3.2 percent to 75.0 percent. The authors also combine the top Fast R-CNN model with several other Fast R-CNN variants. Those ensembles produce only small increases in mAP, between 0.3 and 0.6 percent. This suggests that YOLO's benefit is not simply due to ensembling, but because YOLO makes different kinds of mistakes and is especially effective at suppressing background false positives.
+
+This combined system does not inherit YOLO's speed because each model is still run separately and the results are merged afterward. However, YOLO is so fast that it does not add significant computational cost compared with Fast R-CNN.
+
+4.4. VOC 2012 Results
+
+On the VOC 2012 test set, YOLO scores 57.9 percent mAP. This is lower than the current state of the art and closer to the original R-CNN using VGG-16. The system struggles with small objects compared with its closest competitors. On categories such as bottle, sheep, and tv-monitor, YOLO scores 8 to 10 percent lower than R-CNN or Feature Edit. However, on other categories such as cat and train, YOLO achieves higher performance.
+
+The combined Fast R-CNN plus YOLO model is one of the highest-performing detection methods on the public leaderboard described in the paper. Fast R-CNN obtains a 2.3 percent improvement from combining with YOLO, which moves it five places higher on the leaderboard.
+
+4.5. Generalizability: Person Detection In Artwork
+
+Academic datasets for object detection usually draw training and testing data from the same distribution. In real-world applications, however, test data may differ substantially from what the system has seen before. To evaluate robustness under distribution shift, the paper compares YOLO with other detection systems on the Picasso Dataset and the People-Art Dataset, both of which test person detection on artwork.
+
+R-CNN performs well on VOC 2007 but drops off considerably when applied to artwork. Selective Search is tuned for natural images, and the classifier step in R-CNN only sees small regions, which makes it rely heavily on good proposals.
+
+DPM maintains its average precision better when applied to artwork. Prior work suggests this is because DPM has strong spatial models of object shape and layout. However, DPM starts from a lower AP on the original benchmark.
+
+YOLO performs well on VOC 2007 and its AP degrades less than other methods when applied to artwork. Like DPM, YOLO models the size and shape of objects as well as relationships between objects and where objects commonly appear. Artwork and natural images differ greatly at the pixel level, but they remain similar in object size and shape, so YOLO can still predict good bounding boxes and detections.
+
+5. Real-Time Detection In The Wild
+
+YOLO is a fast and accurate object detector, making it well suited for practical computer vision applications. The authors connect YOLO to a webcam and verify that it maintains real-time performance, including the time needed to fetch images from the camera and display detections.
+
+The resulting system is interactive and engaging. Although YOLO processes images individually, when attached to a webcam it functions similarly to a tracking system, detecting objects as they move around and change in appearance.
+
+6. Conclusion
+
+The paper introduces YOLO, a unified model for object detection. The model is simple to construct and can be trained directly on full images. Unlike classifier-based approaches, YOLO is trained on a loss function that directly corresponds to detection performance, and the entire model is trained jointly.
+
+Fast YOLO is presented as the fastest general-purpose object detector in the literature at that time, and YOLO pushes forward the state of the art in real-time object detection. YOLO also generalizes well to new domains, making it particularly suitable for applications that require fast and robust object detection.
